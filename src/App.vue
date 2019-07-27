@@ -1,48 +1,57 @@
 <template>
-  <v-app id="sandbox">
+  <v-app id="inspire">
     <v-navigation-drawer
-      v-model="primaryDrawer.model"
-      :clipped="primaryDrawer.clipped"
-      :floating="primaryDrawer.floating"
-      :mini-variant="primaryDrawer.mini"
-      :permanent="primaryDrawer.type === 'permanent'"
-      :temporary="primaryDrawer.type === 'temporary'"
+      v-model="drawer"
       app
-      overflow
-    />
+    >
+      <v-list dense>
+        <v-list-item to="/">
+          <v-list-item-action>
+            <v-icon>fa-home</v-icon>
+          </v-list-item-action>
+          <v-list-item-content>
+            <v-list-item-title>Accueil</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item to="scenes">
+          <v-list-item-action>
+            <v-icon>fa-cubes</v-icon>
+          </v-list-item-action>
+          <v-list-item-content>
+            <v-list-item-title>Scènes</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+      </v-list>
+    </v-navigation-drawer>
 
-    <v-app-bar :clipped-left="primaryDrawer.clipped" app>
-      <v-app-bar-nav-icon
-        v-if="primaryDrawer.type !== 'permanent'"
-        @click.stop="primaryDrawer.model = !primaryDrawer.model"
-      />
-      <v-toolbar-title>Vuetify</v-toolbar-title>
+    <v-app-bar
+      app
+      color="indigo"
+      dark
+    >
+      <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
+      <v-toolbar-title>Application</v-toolbar-title>
     </v-app-bar>
 
     <v-content>
-      <router-view />
+        <router-view></router-view>
     </v-content>
-
-    <v-footer :inset="footer.inset" app>
-      <span class="px-4">&copy; {{ new Date().getFullYear() }}</span>
+    <v-footer
+      color="indigo"
+      app
+    >
+      <span class="white--text">&copy; 2019</span>
     </v-footer>
   </v-app>
 </template>
 
 <script>
 export default {
+  props: {
+    source: String
+  },
   data: () => ({
-    drawers: ['Default (no property)', 'Permanent', 'Temporary'],
-    primaryDrawer: {
-      model: null,
-      type: 'default (no property)',
-      clipped: false,
-      floating: false,
-      mini: false
-    },
-    footer: {
-      inset: false
-    }
+    drawer: null
   })
 }
 </script>

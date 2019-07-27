@@ -158,9 +158,9 @@ export default {
     },
     onCompleteCamera (scene) {
       console.log('onCompleteCamera myAssetRoot')
-      // this.camera.lowerRadiusLimit = 40;
-      // this.camera.upperRadiusLimit = 180;
-      // this.camera.upperBetaLimit = 1.5;
+      this.camera.lowerRadiusLimit = 40
+      this.camera.upperRadiusLimit = 180
+      this.camera.upperBetaLimit = 1.5
       this.camera.useBouncingBehavior = true
     },
     onCompleteHemisphericLight (obj) {
@@ -179,26 +179,6 @@ export default {
       // var myMaterial = new BABYLON.StandardMaterial("myMaterial", this.myScene);
       // myMaterial.diffuseTexture = new BABYLON.Texture("3d/textures/wood.jpg", this.myScene);
       // this.myAssetRoot.material = myMaterial
-    },
-    camera () {
-      console.log('Watch camera')
-      console.log(this.camera)
-      // var myMaterial = new BABYLON.StandardMaterial("myMaterial", this.myScene);
-      // myMaterial.emissiveTexture = new BABYLON.Texture("https://www.babylonjs-playground.com/textures/grass.png", this.myScene);
-      // myMaterial.diffuseColor = new BABYLON.Color3(1, 0, 1);
-      // this.mySphere.material = myMaterial
-      // myEntity is now available from the component
-      // do something with it here or call a method to use it from here
-    },
-    mySkull () {
-      // console.log("Watch mySkull");
-      // console.log(this.mySkull);
-      // var myMaterial = new BABYLON.StandardMaterial("myMaterial", this.myScene);
-      // myMaterial.emissiveTexture = new BABYLON.Texture("https://www.babylonjs-playground.com/textures/grass.png", this.myScene);
-      // myMaterial.diffuseColor = new BABYLON.Color3(1, 0, 1);
-      // this.mySkull.material = myMaterial
-      // myEntity is now available from the component
-      // do something with it here or call a method to use it from here
     }
   }
 }
