@@ -1,5 +1,5 @@
 <template>
-  <Scene v-model="myScene" @scene="onScene" @complete="onComplete">
+  <Scene v-if="sceneReady" v-model="myScene" @scene="onScene" @complete="onComplete">
     <Entity>
       <Camera
         :position="[0, 0, 0]"
@@ -14,32 +14,14 @@
         v-model="hemispheric_light"
         @complete="onCompleteHemisphericLight"
       />
-
-      <!-- <Asset
-        src="/3d/Low-poly scene.gltf"
-        v-model="myAssetRoot"
-        :scaling="[0.1, 0.1, 0.1]"
-        :position="[0, 0, 0]"
-      >
-      </Asset>-->
-      <!-- <Sphere v-model="mySphere" :position="[0, 0, 0]" :scaling="[20,20,20]"></Sphere> -->
-      <!-- <Asset
-        v-model="mySkull"
-        src="https://www.babylonjs-playground.com/scenes/skull.babylon"
-        :scaling="[0.02, 0.02, 0.02]"
-        :position="[-1, 0, -1]"
-      >
-        <Material diffuse="#F00" :metallic="0" :roughness="1">
-
-        </Material>
-      </Asset>
-      <Sphere v-model="mySphere" :position="[-1.5, 0, 0]"></Sphere>-->
     </Entity>
   </Scene>
 </template>
 <script>
 import { BABYLON } from 'vue-babylonjs'
-import { WaterMaterial } from '@babylonjs/materials'
+
+import { CreateSkyBox } from '@/components/3d/SkyBox.js'
+import { CreateWater, WaterRender } from '@/components/3d/Water.js'
 
 export default {
   data () {
@@ -51,21 +33,30 @@ export default {
       mySkull: null,
       myScene: null,
       myMaterial: null,
-      hemispheric_light: null
+      hemispheric_light: null,
+      sceneReady: false
     }
   },
   mounted () {
-    this.$store.dispatch('user/getSettings')
+    this.getApiData()
   },
 
   methods: {
+    async getApiData () {
+      await this.$store.dispatch('user/getSettings')
+      console.log('OK getAPIData')
+      this.sceneReady = true
+    },
     onScene (scene) {
-      // Création du loader
+      console.log('ON SCENE')
+      this.launchAssets(scene)
+      //
+    },
+    launchAssets (scene) {
       BABYLON.SceneLoader.ImportMesh('', '3d/', 'lpi2.babylon', scene, function (
         newMeshes
       ) {
-        console.log(newMeshes)
-
+        
         var myMaterial = new BABYLON.StandardMaterial('myMaterial', scene)
         myMaterial.diffuseTexture = new BABYLON.Texture(
           '3d/textures/base_texture.jpg',
@@ -76,59 +67,11 @@ export default {
         newMeshes[0].material = myMaterial
         // do something with the meshes and skeletons
         // particleSystems are always null for glTF assets
-        var skybox = BABYLON.Mesh.CreateBox('skyBox', 1000.0, scene)
-        var skyboxMaterial = new BABYLON.StandardMaterial('skyBox', scene)
-        skyboxMaterial.backFaceCulling = false
-        skyboxMaterial.reflectionTexture = new BABYLON.CubeTexture(
-          '3d/textures/TropicalSunnyDay',
-          scene
-        )
-        skyboxMaterial.reflectionTexture.coordinatesMode =
-          BABYLON.Texture.SKYBOX_MODE
-        skyboxMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0)
-        skyboxMaterial.specularColor = new BABYLON.Color3(0, 0, 0)
-        skyboxMaterial.disableLighting = true
-        skybox.material = skyboxMaterial
 
-        // Ground
-        var groundTexture = new BABYLON.Texture('3d/textures/sand.jpg', scene)
-        groundTexture.vScale = groundTexture.uScale = 4.0
-
-        var groundMaterial = new BABYLON.StandardMaterial(
-          'groundMaterial',
-          scene
-        )
-        groundMaterial.diffuseTexture = groundTexture
-
-        // var ground = BABYLON.Mesh.CreateGround("ground", 512, 512, 32, scene, false);
-        // ground.position.y = -2;
-        // ground.material = groundMaterial;
-
+        // Création du skyBox
+        var skybox = CreateSkyBox(scene, null)
         // Water
-        var waterMesh = BABYLON.Mesh.CreateGround(
-          'waterMesh',
-          1024,
-          1024,
-          0,
-          scene,
-          false
-        )
-        waterMesh.position.y = -0.1
-        var water = new WaterMaterial(
-          'water',
-          scene,
-          new BABYLON.Vector2(1024, 1024)
-        )
-        water.backFaceCulling = true
-        water.bumpTexture = new BABYLON.Texture(
-          '3d/textures/waterbump.png',
-          scene
-        )
-        water.windForce = -2
-        water.waveHeight = 0.1
-        water.bumpHeight = 0.1
-        water.waveLength = 0.05
-        water.colorBlendFactor = 0.1
+        var waterObj = CreateWater(scene, null)
         //
         var sphereMaterial = new BABYLON.StandardMaterial(
           'sphereMaterial',
@@ -142,22 +85,16 @@ export default {
         var sphere = BABYLON.Mesh.CreateSphere('sphere', 16, 10, scene)
         sphere.position.x = -20
         sphere.material = sphereMaterial
-
-        // water.addToRenderList(this.myAssetRoot);
-        water.addToRenderList(skybox)
-        water.addToRenderList(sphere)
-        water.addToRenderList(newMeshes[0])
-
-        waterMesh.material = water
+        //
+        var mesh1 = newMeshes[0]
+        // Mettre le render de l'eau après la création des objets
+        WaterRender([skybox, sphere, mesh1], waterObj)
       })
-
-      //
     },
     onComplete (scene) {
       console.log('onComplete')
     },
     onCompleteCamera (scene) {
-      console.log('onCompleteCamera myAssetRoot')
       this.camera.lowerRadiusLimit = 40
       this.camera.upperRadiusLimit = 180
       this.camera.upperBetaLimit = 1.5
@@ -171,14 +108,6 @@ export default {
     myScene () {
       // myScene is now available from the component
       // do something with it here or call a method to use it from here
-    },
-
-    myAssetRoot () {
-      console.log('Watch myAssetRoot')
-      console.log(this.myAssetRoot)
-      // var myMaterial = new BABYLON.StandardMaterial("myMaterial", this.myScene);
-      // myMaterial.diffuseTexture = new BABYLON.Texture("3d/textures/wood.jpg", this.myScene);
-      // this.myAssetRoot.material = myMaterial
     }
   }
 }
