@@ -7,7 +7,7 @@ import store from './store/'
 // import guest from './middleware/guest'
 // import auth from './middleware/auth'
 // import isSubscribed from './middleware/isSubscribed'
-// import base3d from './middleware/base3d'
+import base3d from './middleware/base3d'
 //
 import middlewarePipeline from './middlewarePipeline'
 
@@ -18,11 +18,21 @@ const router = new Router({
   routes: [{
     path: '/',
     name: 'home',
-    component: Home
+    component: Home,
+    meta: {
+      middleware: [
+        base3d,
+      ]
+    }
   },
   {
-    path: '/scenes',
+    path: '/scenes/:slug',
     name: 'scenes',
+    meta: {
+      middleware: [
+        base3d,
+      ]
+    },
     // route level code-splitting
     // this generates a separate chunk (about.[hash].js) for this route
     // which is lazy-loaded when the route is visited.
@@ -31,6 +41,7 @@ const router = new Router({
   ]
 })
 router.beforeEach((to, from, next) => {
+  console.log('to.meta', to.meta.middleware)
   if (!to.meta.middleware) {
     return next()
   }

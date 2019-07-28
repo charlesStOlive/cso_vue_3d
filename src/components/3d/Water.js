@@ -18,7 +18,7 @@ function CreateWater(scene, options) {
     )
     waterMaterial.backFaceCulling = true
     waterMaterial.bumpTexture = new BABYLON.Texture(
-        '3d/textures/waterbump.png',
+        '/3d/textures/waterbump.png',
         scene
     )
     waterMaterial.windForce = -2

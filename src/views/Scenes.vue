@@ -1,5 +1,5 @@
 <template>
-  <Scene v-if="sceneReady" v-model="myScene" @scene="onScene" @complete="onComplete">
+  <Scene v-if="scene_ready" v-model="myScene" @scene="onScene" @complete="onComplete">
     <Entity>
       <Camera
         :position="[0, 0, 0]"
@@ -18,10 +18,14 @@
   </Scene>
 </template>
 <script>
+import { mapGetters } from 'vuex'
+//
 import { BABYLON } from 'vue-babylonjs'
-
+//
 import { CreateSkyBox } from '@/components/3d/SkyBox.js'
 import { CreateWater, WaterRender } from '@/components/3d/Water.js'
+//
+import { WaterObject } from '@/components/3d/WaterObject'
 
 export default {
   data () {
@@ -34,62 +38,81 @@ export default {
       myScene: null,
       myMaterial: null,
       hemispheric_light: null,
-      sceneReady: false
+      tasks: null,
+      assets: [],
+      assetsManager: null,
+      rootScene: null
     }
   },
+  computed: {
+      ...mapGetters({
+        scene_ready : 'troisd/scene_ready',
+        scene : 'troisd/scene',
+      })
+    },
   mounted () {
     this.getApiData()
   },
 
   methods: {
     async getApiData () {
-      await this.$store.dispatch('user/getSettings')
-      console.log('OK getAPIData')
-      this.sceneReady = true
+      this.$store.dispatch('troisd/getScene', this.$route.params.slug)
     },
     onScene (scene) {
       console.log('ON SCENE')
+      this.rootScene = scene
       this.launchAssets(scene)
       //
     },
-    launchAssets (scene) {
-      BABYLON.SceneLoader.ImportMesh('', '3d/', 'lpi2.babylon', scene, function (
-        newMeshes
-      ) {
-        
-        var myMaterial = new BABYLON.StandardMaterial('myMaterial', scene)
-        myMaterial.diffuseTexture = new BABYLON.Texture(
-          '3d/textures/base_texture.jpg',
-          scene
-        )
-        // myMaterial.backFaceCulling = true
-        myMaterial.specularColor = new BABYLON.Color3(0, 0, 0)
-        newMeshes[0].material = myMaterial
-        // do something with the meshes and skeletons
-        // particleSystems are always null for glTF assets
+    async launchAssets (scene) {
+      this.assetsManager = new BABYLON.AssetsManager(scene)
+      this.assets['ilandTask'] = this.assetsManager.addMeshTask('ilandTask', '', '/3d/', 'lpi2.babylon')
+      // var tasks = this.assetsManager.addMeshTask('ilandTask', '', '3d/', 'lpi2.babylon')
+      // Load assets
+      this.assetsManager.load()
 
-        // Création du skyBox
-        var skybox = CreateSkyBox(scene, null)
-        // Water
-        var waterObj = CreateWater(scene, null)
-        //
-        var sphereMaterial = new BABYLON.StandardMaterial(
-          'sphereMaterial',
-          scene
-        )
-        sphereMaterial.diffuseTexture = new BABYLON.Texture(
-          '3d/textures/wood.jpg',
-          scene
-        )
+      // fonction à la fin
+      this.assetsManager.onFinish = function (tasks) {
+        console.log('stasks on finish...:', this.assets['ilandTask'])
+        this.assets['ilandTask'].loadedMeshes[0].position = new BABYLON.Vector3(0, 0, 0)
+        this.finishScene(this.rootScene)
+      }.bind(this)
+    },
+    finishScene (scene) {
+      // var myMaterial = new BABYLON.StandardMaterial('myMaterial', scene)
+      // myMaterial.diffuseTexture = new BABYLON.Texture(
+      //   '3d/textures/base_texture.jpg',
+      //   scene
+      // )
+      // myMaterial.backFaceCulling = true
+      // myMaterial.specularColor = new BABYLON.Color3(0, 0, 0)
+      // this.task['ilandTask'].material = myMaterial
+      // do something with the meshes and skeletons
+      // particleSystems are always null for glTF assets
 
-        var sphere = BABYLON.Mesh.CreateSphere('sphere', 16, 10, scene)
-        sphere.position.x = -20
-        sphere.material = sphereMaterial
-        //
-        var mesh1 = newMeshes[0]
-        // Mettre le render de l'eau après la création des objets
-        WaterRender([skybox, sphere, mesh1], waterObj)
-      })
+      // Création du skyBox
+      var skybox = CreateSkyBox(scene, null)
+      // Water
+      //var waterObj = CreateWater(scene, null)
+      var waterObj = new WaterObject(scene)
+      //
+      var sphereMaterial = new BABYLON.StandardMaterial(
+        'sphereMaterial',
+        scene
+      )
+      sphereMaterial.diffuseTexture = new BABYLON.Texture(
+        '3d/textures/wood.jpg',
+        scene
+      )
+
+      var sphere = BABYLON.Mesh.CreateSphere('sphere', 16, 10, scene)
+      sphere.position.x = -20
+      sphere.material = sphereMaterial
+      //
+      //var mesh1 = this.assets['ilandTask']
+      // Mettre le render de l'eau après la création des objets
+      waterObj.WaterRender(skybox, [this.assets['ilandTask'].loadedMeshes[0], sphere])
+      //WaterRender([skybox], waterObj)
     },
     onComplete (scene) {
       console.log('onComplete')
@@ -109,6 +132,18 @@ export default {
       // myScene is now available from the component
       // do something with it here or call a method to use it from here
     }
+    // 'assetsManager.onFinish': function () {
+    //   console.log('assetsManager.onFinish')
+    //   console.log(this.tasks['ilandTask']['loadedMeshes'])
+    //   this.assets['ilandTask'] = this.tasks['ilandTask'].loadedMeshes[0]
+    //   this.assets['ilandTask'].position = BABYLON.Vector3(1, 12, 1)
+    //   this.finishScene(this.rootScene)
+    //   // console.log(this.assets['ilandTask'])
+    // },
+    // 'assetsManager.onTaskSuccessObservable': function (task) {
+    //   console.log('task successful', task)
+    //   task.loadedMeshes[0].position = BABYLON.Vector3(1, 12, 1)
+    // }
   }
 }
 </script>

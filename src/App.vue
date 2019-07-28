@@ -3,6 +3,7 @@
     <v-navigation-drawer
       v-model="drawer"
       app
+      v-if="scenes_ready"
     >
       <v-list dense>
         <v-list-item to="/">
@@ -13,12 +14,16 @@
             <v-list-item-title>Accueil</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item to="scenes">
+        <v-list-item 
+        v-for="scene in scenes"
+        :key="scene.id"
+        :to="{ name: 'scenes', params: { slug: scene.slug }}
+        ">
           <v-list-item-action>
             <v-icon>fa-cubes</v-icon>
           </v-list-item-action>
           <v-list-item-content>
-            <v-list-item-title>Scènes</v-list-item-title>
+            <v-list-item-title>{{ scene.name }}</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
       </v-list>
@@ -46,12 +51,20 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
+
 export default {
   props: {
     source: String
   },
   data: () => ({
     drawer: null
-  })
+  }),
+  computed: {
+      ...mapGetters({
+        scenes_ready : 'troisd/scenes_ready',
+        scenes : 'troisd/scenes',
+      })
+    },
 }
 </script>
